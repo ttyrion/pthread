@@ -1,0 +1,37 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/main",
+            "args": ["/home/marting/github", "shared_ptr"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                { 
+                    // From https://github.com/Microsoft/vscode-cpptools/issues/69 :
+                    
+                    // Typing "-exec set print pretty" in the debug console. 
+                    // This will turn on pretty printing for gdb. 
+                    // We turned it off by default because of performance issues.
+                    "description": "enable pretty printing", 
+                    "text": "-enable-pretty-printing", 
+                    "ignoreFailures": true 
+                }
+            ]
+        }
+    ]
+}
