@@ -21,6 +21,8 @@ public:
         Worker(std::tr1::shared_ptr<Crew> crew, const int id);
         bool Activate();
         void *operator()();
+        void Stop();
+        void Clean();
         void Report();
 
     private:
@@ -39,10 +41,12 @@ protected:
 public:
 bool Init(const int workers_count);
 int Start(const std::string &file, const std::string &pattern);
+void Stop();
 void Report();
 
 public:
     std::vector<Work>     works_;
+    int works_count_ = 0;
     pthread_mutex_t     mutex_;          /* Mutex for crew data */
     pthread_cond_t      done_;           /* Crew Waits for work done */
     pthread_cond_t      go_;             /* Workers Wait for work */

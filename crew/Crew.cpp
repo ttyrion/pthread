@@ -61,6 +61,7 @@ int Crew::Start(const std::string &file, const std::string &pattern) {
     wk.pattern = pattern;
 
     works_.push_back(wk);
+    ++works_count_;
     status = pthread_cond_signal (&go_);
     if (status != 0) {
         works_.pop_back();
@@ -83,8 +84,13 @@ int Crew::Start(const std::string &file, const std::string &pattern) {
     return 0;
 }
 
+void Crew::Stop() {
+    for (auto &worker : workers_) {
+        worker->Stop();
+    }
+}
+
 void Crew::Report() {
-    int i = 0;
     for (auto &worker : workers_) {
         worker->Report();
     }
@@ -105,6 +111,8 @@ bool Crew::Worker::Activate() {
 }
 
 void *Crew::Worker::operator()() {
+    pthread_cleanup_push(WorkerCleanRoutine<Worker>, this);
+    
     while(true) {
         if (crew_belongs_to_.expired()) {
             LOG_RETURN(0, id_ <<  " crew expired.");
@@ -170,6 +178,7 @@ void *Crew::Worker::operator()() {
                 }
 
                 crew_belongs_to_.lock()->works_.push_back(new_work);
+                ++crew_belongs_to_.lock()->works_count_;
 
                 /* Signal the waiters at first, a waiter would be waken up from the cond and then lock on crew mutex. */
                 status = pthread_cond_signal (&(crew_belongs_to_.lock()->go_));
@@ -201,7 +210,7 @@ void *Crew::Worker::operator()() {
                 std::string line;
                 std::getline(infile, line);
                     ++line_num;
-                    if (line.find_first_of(wk.pattern) != -1) {
+                    if (line.find_first_of(wk.pattern) != std::string::npos) {
                         matched_files_.push_back(wk.path);
                         break;
                     }
@@ -217,7 +226,13 @@ void *Crew::Worker::operator()() {
             LOG_RETURN((void*)status, id_ <<  " lock crew mutex failed.");
         }
 
-        if (crew_belongs_to_.lock()->works_.size() <= 0) {
+        --crew_belongs_to_.lock()->works_count_;
+
+        /* 
+        * It's wrong to know if the task is finished according to the size of works_ .
+        */
+        //if (crew_belongs_to_.lock()->works_.size() <= 0) {
+        if (crew_belongs_to_.lock()->works_count_ <= 0) {
             LOG(id_ <<  " all work done.");
 
             status = pthread_cond_broadcast(&(crew_belongs_to_.lock()->done_));
@@ -232,6 +247,8 @@ void *Crew::Worker::operator()() {
             /* break out the outside loop , return from the thread routine. */
             LOG(id_ <<  " stop.");
 
+            crew_belongs_to_.lock()->Stop();
+
             return (void*)-1;
         }
         
@@ -240,10 +257,21 @@ void *Crew::Worker::operator()() {
             LOG_RETURN((void*)status, id_ <<  " unlock crew mutex failed.");
         }
     }
+
+    /* push and pop should exist in pairs. */
+    pthread_cleanup_pop(0);
+}
+
+void Crew::Worker::Stop() {
+    pthread_cancel(thread_);
+}
+
+void Crew::Worker::Clean() {
+    LOG("[worker] " << id_ << " clean.");
 }
 
 void Crew::Worker::Report() {
-    LOG("worker " << id_ << ":");
+    LOG("[worker] " << id_ << ":");
     for (auto &file : matched_files_) {
         std::cout << file << std::endl;
     }

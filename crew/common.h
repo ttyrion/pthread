@@ -25,4 +25,9 @@ void *WorkerRoutine(void *pt) {
     return (*(reinterpret_cast<T*>(pt)))();
 };
 
+template <class T>
+void WorkerCleanRoutine(void *pt) {
+    return ((reinterpret_cast<T*>(pt)->Clean()));
+};
+
 #endif /* CREW_COMMON_H */

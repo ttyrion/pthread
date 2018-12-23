@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
     CrewProxy proxy;
     proxy.GetCrew()->Init(5);
     proxy.GetCrew()->Start(argv[1], argv[2]);
+    proxy.GetCrew()->Report();
 
     return 0;
 }
