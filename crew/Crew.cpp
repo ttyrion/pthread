@@ -96,9 +96,26 @@ void Crew::Report() {
     }
 }
 
+void Crew::JoinWorkers() {
+    for (auto &worker : workers_) {
+        worker->Join();
+    }
+}
+
+void Crew::DetachWorkers() {
+    for (auto &worker : workers_) {
+        worker->Detach();
+    }
+}
+
 Crew::Worker::Worker(std::tr1::shared_ptr<Crew> crew, const int id) {
     crew_belongs_to_ = crew;
     id_ = id;
+    LOG("[worker] " << id_ << " constructed.");
+}
+
+Crew::Worker::~Worker() {
+    LOG("[worker] " << id_ << " destructed.");
 }
 
 bool Crew::Worker::Activate() {
@@ -249,17 +266,25 @@ void *Crew::Worker::operator()() {
 
             crew_belongs_to_.lock()->Stop();
 
-            return (void*)-1;
+            /*
+            *  pthread_cleanup_push and pthread_cleanup_pop should exist and called in pairs.
+            */
+
+            //return (void*)-1;
+            break;
         }
-        
-        status = pthread_mutex_unlock(&(crew_belongs_to_.lock()->mutex_));
-        if (status != 0) {
-            LOG_RETURN((void*)status, id_ <<  " unlock crew mutex failed.");
+        else {
+            status = pthread_mutex_unlock(&(crew_belongs_to_.lock()->mutex_));
+            if (status != 0) {
+                LOG_RETURN((void*)status, id_ <<  " unlock crew mutex failed.");
+            }
         }
     }
 
     /* push and pop should exist in pairs. */
     pthread_cleanup_pop(0);
+
+    return (void*)0;
 }
 
 void Crew::Worker::Stop() {
@@ -275,6 +300,21 @@ void Crew::Worker::Report() {
     for (auto &file : matched_files_) {
         std::cout << file << std::endl;
     }
+}
+
+void Crew::Worker::Join() {
+    void *pretval = nullptr;
+    pthread_join(thread_, &pretval);
+    if (pretval == PTHREAD_CANCELED) {
+        LOG("[worker] " << id_ << " was canceled.");
+    }
+    else {
+        LOG("[worker] " << id_ << " exit with " << pretval);
+    }
+}
+
+void Crew::Worker::Detach() {
+    pthread_detach(thread_);
 }
 
 std::tr1::shared_ptr<Crew> CrewProxy::GetCrew() {

@@ -9,6 +9,7 @@ int main(int argc, char *argv[]) {
     proxy.GetCrew()->Init(5);
     proxy.GetCrew()->Start(argv[1], argv[2]);
     proxy.GetCrew()->Report();
+    proxy.GetCrew()->JoinWorkers();
 
     return 0;
 }
