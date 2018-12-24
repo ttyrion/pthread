@@ -19,11 +19,14 @@ public:
     class Worker {
     public:
         Worker(std::tr1::shared_ptr<Crew> crew, const int id);
+        ~Worker();
         bool Activate();
         void *operator()();
         void Stop();
         void Clean();
         void Report();
+        void Join();
+        void Detach();
 
     private:
         int            id_ = -1;          /* Thread's index */
@@ -43,6 +46,8 @@ bool Init(const int workers_count);
 int Start(const std::string &file, const std::string &pattern);
 void Stop();
 void Report();
+void JoinWorkers();
+void DetachWorkers();
 
 public:
     std::vector<Work>     works_;
