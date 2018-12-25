@@ -10,7 +10,7 @@
 # define DPRINT(arg)
 #endif
 
-#define LOG(log) std::cout << __FUNCTION__ << ":" << log << std::endl
+#define LOG(log) std::cout << __FUNCTION__ << ":line" << __LINE__ << ":" << log << std::endl
 #define LOG_RETURN(value,log) std::cout << __FUNCTION__ << ":line" << __LINE__ << ":" << log << " @"<< value << std::endl; return value
 
 

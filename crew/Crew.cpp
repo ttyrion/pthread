@@ -303,13 +303,34 @@ void Crew::Worker::Report() {
 }
 
 void Crew::Worker::Join() {
-    void *pretval = nullptr;
-    pthread_join(thread_, &pretval);
-    if (pretval == PTHREAD_CANCELED) {
-        LOG("[worker] " << id_ << " was canceled.");
-    }
-    else {
-        LOG("[worker] " << id_ << " exit with " << pretval);
+    while(true) {
+        struct timespec ts;
+        if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
+            pthread_detach(thread_);
+            return;
+        }
+        ts.tv_sec += 5;
+
+        void *pretval = nullptr;
+        int status = pthread_timedjoin_np(thread_, &pretval, &ts);
+        if (status != 0 && status == ETIMEDOUT) {
+            LOG("[worker] " << id_ << " join timed out.");
+            status = pthread_mutex_unlock(&(crew_belongs_to_.lock()->mutex_));
+            if (status != 0) {
+                LOG("[worker] " << id_ <<  " unlock crew mutex failed.");
+                return;
+            }
+        }
+        else {
+            if (pretval == PTHREAD_CANCELED) {
+                LOG("[worker] " << id_ << " was canceled.");
+            }
+            else {
+                LOG("[worker] " << id_ << " exit with " << pretval);
+            }
+
+            break;
+        }
     }
 }
 
