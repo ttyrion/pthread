@@ -338,7 +338,7 @@ void Crew::Worker::Detach() {
     pthread_detach(thread_);
 }
 
-std::tr1::shared_ptr<Crew> CrewProxy::GetCrew() {
+std::tr1::shared_ptr<Crew> CrewFactory::GetCrew() {
     if (!crew_.get()) {
         crew_.reset(new Crew());
     }

@@ -14,7 +14,7 @@ class Crew
         */
         : public std::tr1::enable_shared_from_this<Crew> {
 
-        friend class CrewProxy;
+        friend class CrewFactory;
 public:    
     class Worker {
     public:
@@ -60,7 +60,7 @@ private:
     std::vector<std::tr1::shared_ptr<Worker> > workers_;
 };
 
-class CrewProxy {
+class CrewFactory {
 public:
     std::tr1::shared_ptr<Crew> GetCrew();
 

@@ -5,11 +5,11 @@ int main(int argc, char *argv[]) {
         LOG_RETURN(1, "main need more arguments!");
     }
 
-    CrewProxy proxy;
-    proxy.GetCrew()->Init(5);
-    proxy.GetCrew()->Start(argv[1], argv[2]);
-    proxy.GetCrew()->Report();
-    proxy.GetCrew()->JoinWorkers();
+    CrewFactory factory;
+    factory.GetCrew()->Init(5);
+    factory.GetCrew()->Start(argv[1], argv[2]);
+    factory.GetCrew()->Report();
+    factory.GetCrew()->JoinWorkers();
 
     return 0;
 }
